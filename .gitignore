@@ -1,0 +1,14 @@
+.installed.cfg
+bin
+develop-eggs
+dist
+downloads
+eggs
+parts
+src/*.egg-info
+lib
+lib64
+data/
+/config/.env
+.vscode/
+__pycache__/
