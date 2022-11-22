@@ -17,4 +17,4 @@ pyodbc
 datetime
 plotly.express
 nbformat
-kaleido
+kaleido==0.1.*
