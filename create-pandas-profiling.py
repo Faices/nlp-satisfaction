@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 
 ## import data
-filename = "DataRaw"
+filename = "DataClean"
 folderpath = "data/"
 df = pd.read_feather(folderpath + filename)
 
@@ -14,7 +14,7 @@ profile = ProfileReport(
     title=filename,
     lazy=False,
     dark_mode=True,
-    minimal=True,
+    minimal=False,
 )
 
-profile.to_file("html/ProfilingDataRaw.html")
+profile.to_file("html/ProfilingDataClean.html")
