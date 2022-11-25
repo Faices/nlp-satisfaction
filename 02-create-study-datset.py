@@ -29,7 +29,9 @@ df = df[config['fragecode']]
 
 # filter date range
 df['u_date'] = pd.to_datetime(df['u_date'])
-df = df[(df['u_date'] >= "2019-01-01") & (df['u_date'] < "2022-12-31")]
+df_1 = df[(df['u_date'] >= "2019-01-01") & (df['u_date'] < "2020-04-01")]
+df_2 = df[(df['u_date'] >= "2020-06-01") & (df['u_date'] <= "2023-01-01")]
+df = pd.concat([df_1, df_2],ignore_index=True)
 
 # filter language
 df = df[df['S_sprache']=="Deutsch"] #Aufgrund der Auswahlkriterien werden nur Deutschspraige Records verwendet
