@@ -1,5 +1,5 @@
 import pandas as pd
-from functions import filter_dateframe_cols
+from functions import filter_dateframe_cols,anonymizer_de
 import openpyxl
 import numpy as np
 import re
@@ -134,29 +134,31 @@ df['u_fahrausweis'] = df['u_fahrausweis'].replace('normales Billett', 'Normales 
 
 ###################  Annonymisation ###################
 
-def sent_to_words(sentences):
-    for sent in sentences:
-        if isinstance(sent, str):# remove emails
-            sent = re.sub("(([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\." \
-                  "([a-z]{2,6}(?:\.[a-z]{2})?))(?![^<]*>)", "<EMAIL>", sent)
-            # remove phonenumber
-            sent = re.sub(r'/(\b(0041|0)|\B\+41)(\s?\(0\))?(\s)?[1-9]{2}(\s)?[0-9]{3}(\s)?[0-9]{2}(\s)?[0-9]{2}\b/', '<PHONENUMBER>', sent)
-            sent = re.sub(r' ([0-9]{10}) ', '<PHONENUMBER>', sent)
-            sent = re.sub(r' ([0-9]{13}) ', '<PHONENUMBER>', sent)
-            sent = re.sub(r'([0-9]{3}) ([0-9]{3}) ([0-9]{2}) ([0-9]{2})', '<PHONENUMBER>', sent)
-            sent = re.sub(r'([0-9]{3})-([0-9]{3})-([0-9]{2})-([0-9]{2})', '<PHONENUMBER>', sent)
-            sent = re.sub('\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]?','<PHONENUMBER>',sent)
-            sent = re.sub('/(\b(0041|0)|\B\+41)(\s?\(0\))?(\s)?[1-9]{2}(\s)?[0-9]{3}(\s)?[0-9]{2}(\s)?[0-9]{2}\b/','<PHONENUMBER>',sent)
-            sent = re.sub('^(\+?)(\d{2,4})(\s?)(\-?)((\(0\))?)(\s?)(\d{2})(\s?)(\-?)(\d{3})(\s?)(\-?)(\d{2})(\s?)(\-?)(\d{2})','<PHONENUMBER>',sent)
-            sent = re.sub('/^(?:(?:|0{1,2}|\+{0,2})41(?:|\(0\))|0)([1-9]\d)(\d{3})(\d{2})(\d{2})$/','<PHONENUMBER>',sent)
-            sent = re.sub('^(?:\s*-*\s*\d){10}$','<PHONENUMBER>',sent)
-            #sent = gensim.utils.simple_preprocess(str(sent), deacc=True) 
-        else:
-            sent = np.NaN
+# def sent_to_words(sentences):
+#     for sent in sentences:
+#         if isinstance(sent, str):# remove emails
+#             sent = re.sub("(([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\." \
+#                   "([a-z]{2,6}(?:\.[a-z]{2})?))(?![^<]*>)", "<EMAIL>", sent)
+#             # remove phonenumber
+#             sent = re.sub(r'/(\b(0041|0)|\B\+41)(\s?\(0\))?(\s)?[1-9]{2}(\s)?[0-9]{3}(\s)?[0-9]{2}(\s)?[0-9]{2}\b/', '<PHONENUMBER>', sent)
+#             sent = re.sub(r' ([0-9]{10}) ', '<PHONENUMBER>', sent)
+#             sent = re.sub(r' ([0-9]{13}) ', '<PHONENUMBER>', sent)
+#             sent = re.sub(r'([0-9]{3}) ([0-9]{3}) ([0-9]{2}) ([0-9]{2})', '<PHONENUMBER>', sent)
+#             sent = re.sub(r'([0-9]{3})-([0-9]{3})-([0-9]{2})-([0-9]{2})', '<PHONENUMBER>', sent)
+#             sent = re.sub('\d{3}[-\.\s]??\d{3}[-\.\s]??\d{4}|\(\d{3}\)\s*\d{3}[-\.\s]?','<PHONENUMBER>',sent)
+#             sent = re.sub('/(\b(0041|0)|\B\+41)(\s?\(0\))?(\s)?[1-9]{2}(\s)?[0-9]{3}(\s)?[0-9]{2}(\s)?[0-9]{2}\b/','<PHONENUMBER>',sent)
+#             sent = re.sub('^(\+?)(\d{2,4})(\s?)(\-?)((\(0\))?)(\s?)(\d{2})(\s?)(\-?)(\d{3})(\s?)(\-?)(\d{2})(\s?)(\-?)(\d{2})','<PHONENUMBER>',sent)
+#             sent = re.sub('/^(?:(?:|0{1,2}|\+{0,2})41(?:|\(0\))|0)([1-9]\d)(\d{3})(\d{2})(\d{2})$/','<PHONENUMBER>',sent)
+#             sent = re.sub('^(?:\s*-*\s*\d){10}$','<PHONENUMBER>',sent)
+#             #sent = gensim.utils.simple_preprocess(str(sent), deacc=True) 
+#         else:
+#             sent = np.NaN
         
-        yield(sent)
+#         yield(sent)
         
-df['Kommentar'] = list(sent_to_words(df.Kommentar.values.tolist()))
+# df['Kommentar'] = list(sent_to_words(df.Kommentar.values.tolist()))
+
+df['Kommentar'] = anonymizer_de(list(df['Kommentar']))
 
 
 

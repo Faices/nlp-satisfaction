@@ -22,3 +22,5 @@ wordcloud
 nbformat
 ipykernel
 notebook
+presidio-analyzer
+presidio-anonymizer

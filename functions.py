@@ -2,7 +2,14 @@ from pandas_profiling import ProfileReport
 from dotenv import load_dotenv
 import os
 import pyodbc
+import numpy as np
 import re
+from sklearn.feature_extraction.text import CountVectorizer
+import spacy
+from presidio_analyzer import AnalyzerEngine
+from presidio_analyzer.nlp_engine import NlpEngineProvider
+from presidio_anonymizer import AnonymizerEngine
+import pandas as pd
 
 
 def sql_azure_connect():
@@ -59,6 +66,59 @@ def remove_redundant_whitespaces(column):
         templist.append (re.sub(r'\s+'," ", x).strip())
     
     return templist
+
+def get_top_n_words(corpus, n=None):
+    vec = CountVectorizer().fit(corpus)
+    bag_of_words = vec.transform(corpus)
+    sum_words = bag_of_words.sum(axis=0) 
+    words_freq = [(word, sum_words[0, idx]) for word, idx in vec.vocabulary_.items()]
+    words_freq =sorted(words_freq, key = lambda x: x[1], reverse=True)
+    return words_freq[:n]
+
+
+def get_top_n_bigram(corpus, n=None):
+    vec = CountVectorizer(ngram_range=(2, 2)).fit(corpus)
+    bag_of_words = vec.transform(corpus)
+    sum_words = bag_of_words.sum(axis=0) 
+    words_freq = [(word, sum_words[0, idx]) for word, idx in vec.vocabulary_.items()]
+    words_freq =sorted(words_freq, key = lambda x: x[1], reverse=True)
+    return words_freq[:n]
+
+def anonymizer_de(list):
+    
+    anonymized_text_list = []
+    
+    #Create configuration containing engine name and models
+    configuration = {
+    "nlp_engine_name": "spacy",
+    "models": [{"lang_code": "de", "model_name": "de_core_news_lg"}],}
+    
+    # Create NLP engine based on configuration
+    provider = NlpEngineProvider(nlp_configuration=configuration)
+    nlp_engine = provider.create_engine()
+    
+    # the languages are needed to load country-specific recognizers 
+    # # for finding phones, passport numbers, etc.
+    analyzer = AnalyzerEngine(nlp_engine=nlp_engine,
+                              supported_languages=["de"])
+    
+    for comment in list:
+        if isinstance(comment, str):
+            results = analyzer.analyze(text=comment,
+                           language='de',entities=["PERSON","EMAIL_ADDRESS","CREDIT_CARD","IBAN_CODE"])
+            anonymizer = AnonymizerEngine()
+            anonymized_text = anonymizer.anonymize(text=comment, analyzer_results=results).text
+            anonymized_text_list.append(anonymized_text)
+        else:
+            anonymized_text = np.NaN
+            anonymized_text_list.append(anonymized_text)
+            
+            
+        
+    return anonymized_text_list
+    
+    
+    
 
 
 
