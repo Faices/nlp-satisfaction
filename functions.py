@@ -105,7 +105,7 @@ def anonymizer_de(list):
     for comment in list:
         if isinstance(comment, str):
             results = analyzer.analyze(text=comment,
-                           language='de',entities=["PERSON","EMAIL_ADDRESS","CREDIT_CARD","IBAN_CODE"])
+                           language='de',entities=["PERSON","EMAIL_ADDRESS","PHONE_NUMBER","CREDIT_CARD","IBAN_CODE"])
             anonymizer = AnonymizerEngine()
             anonymized_text = anonymizer.anonymize(text=comment, analyzer_results=results).text
             anonymized_text_list.append(anonymized_text)
