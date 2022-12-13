@@ -116,6 +116,46 @@ def anonymizer_de(list):
             
         
     return anonymized_text_list
+
+
+def find_extract_ner_entities_list(list,entitie):
+    
+    ### This function takes a list of strings and one NER entitie (e.g."EMAIL_ADDRESS","PHONE_NUMER",...)as input.It outputs the detected NER Enteties as a List and if nothing was found inserts NONE.
+    
+    results_list = []
+    
+    #Create configuration containing engine name and models
+    configuration = {
+    "nlp_engine_name": "spacy",
+    "models": [{"lang_code": "de", "model_name": "de_core_news_lg"}],}
+    
+    # Create NLP engine based on configuration
+    provider = NlpEngineProvider(nlp_configuration=configuration)
+    nlp_engine = provider.create_engine()
+    
+    # the languages are needed to load country-specific recognizers 
+    # # for finding phones, passport numbers, etc.
+    analyzer = AnalyzerEngine(nlp_engine=nlp_engine,
+                              supported_languages=["de"])
+    
+    for comment in list:
+        if isinstance(comment, str):
+            
+            results = analyzer.analyze(text=comment,
+                           language='de', entities=[entitie]
+                           )
+            
+            detected_entities = [(comment[res.start:res.end]) for res in results]
+            results_list.append(detected_entities)
+            
+        else:
+            detected_entities = None
+            results_list.append(detected_entities)
+            
+    # Replace empty List from List with None using list comprehension
+    results_list = [None if not x else x for x in results_list]
+
+    return results_list
     
     
     
