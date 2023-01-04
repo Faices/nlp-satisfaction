@@ -158,7 +158,7 @@ df['u_fahrausweis'] = df['u_fahrausweis'].replace('normales Billett', 'Normales 
         
 # df['Kommentar'] = list(sent_to_words(df.Kommentar.values.tolist()))
 
-df['Kommentar'] = anonymizer_de(list(df['Kommentar']))
+#df['Kommentar'] = anonymizer_de(list(df['Kommentar']))
 
 
 
