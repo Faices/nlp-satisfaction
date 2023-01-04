@@ -1,4 +1,5 @@
 bertopic
+python-dev-tools
 contractions
 datetime
 gensim
