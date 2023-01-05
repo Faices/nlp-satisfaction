@@ -3,7 +3,7 @@ import pandas as pd
 import datetime
 
 ## import data
-filename = "DataClean"
+filename = "DataText"
 folderpath = "data/"
 df = pd.read_feather(folderpath + filename)
 
@@ -13,8 +13,8 @@ profile = ProfileReport(
     df,
     title=filename,
     lazy=False,
-    dark_mode=True,
-    minimal=False,
+    dark_mode=False,
+    minimal=True,
 )
 
-profile.to_file("html/ProfilingDataClean.html")
+profile.to_file("html/ProfilingDataText.html")

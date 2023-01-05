@@ -33,6 +33,9 @@ df_1 = df[(df['u_date'] >= "2019-01-01") & (df['u_date'] < "2020-04-01")] # igno
 df_2 = df[(df['u_date'] >= "2020-06-01") & (df['u_date'] <= "2023-01-01")] # ignore the stoped 2 COVID-19 Month  april,mai 2020
 df = pd.concat([df_1, df_2],ignore_index=True)
 
+## print len all languages
+print(len(df))
+
 # filter language
 df = df[df['S_sprache']=="Deutsch"] #Aufgrund der Auswahlkriterien werden nur Deutschspraige Records verwendet
 
