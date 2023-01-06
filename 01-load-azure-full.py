@@ -2,6 +2,10 @@ from functions import sql_azure_connect
 import pandas as pd
 import datetime
 
+################### Timer ###################
+starttime = datetime.datetime.now()
+print("Start: ",starttime)
+
 ## connect to azure database
 cnxn = sql_azure_connect()
 
@@ -37,5 +41,10 @@ print("Duration: ",endtime-starttime)
 ## Save file
 kuzu_zug.to_feather("data/DataRaw") # store data in feather file
 
+
+################### Timer ###################
+endtime = datetime.datetime.now()
+print("End: ",endtime)
+print("Duration: ",endtime-starttime)
 
 ##################################################################################################
