@@ -1,4 +1,5 @@
 bertopic
+top2vec
 python-dev-tools
 contractions
 datetime
@@ -8,6 +9,7 @@ lda
 nbformat
 numpy
 openpyxl
+pandas
 pandas_profiling
 plotly.express
 pyLDAvis

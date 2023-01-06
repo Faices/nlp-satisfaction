@@ -30,7 +30,7 @@ df = df[config['fragecode']]
 # filter date range
 df['u_date'] = pd.to_datetime(df['u_date'])
 df_1 = df[(df['u_date'] >= "2019-01-01") & (df['u_date'] < "2020-04-01")] # ignore the stoped 2 COVID-19 Month  april,mai 2020
-df_2 = df[(df['u_date'] >= "2020-06-01") & (df['u_date'] <= "2023-01-01")] # ignore the stoped 2 COVID-19 Month  april,mai 2020
+df_2 = df[(df['u_date'] >= "2020-06-01") & (df['u_date'] <= "2023-12-31")] # ignore the stoped 2 COVID-19 Month  april,mai 2020
 df = pd.concat([df_1, df_2],ignore_index=True)
 
 ## print len all languages
@@ -80,7 +80,14 @@ todate = config[config['datatype'] == 'datetime']
 todate = todate['fragecode']
 for item in todate:
     df[item] = pd.to_datetime(df[item])
-    
+
+
+# Convert to time
+totime = config[config['datatype'] == 'time']
+totime = totime['fragecode']
+for item in totime:
+    df[item] = pd.to_datetime(df[item],format='%H:%M:%S').dt.time
+
 
 # convert to string
 tostring = config[config['datatype'] == 'string']
