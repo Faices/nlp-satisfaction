@@ -1,19 +1,14 @@
-from functions import sql_azure_connect
 import pandas as pd
-import datetime
-
-################### Timer ###################
-starttime = datetime.datetime.now()
-print("Start: ",starttime)
+import timeit
+from functions import sql_azure_connect
 
 ## connect to azure database
 cnxn = sql_azure_connect()
 
-######################################## full load ################################################
 ## Define relevant survey
 UmfrageName = 'kuzu_zug'
 
-q = f"""SELECT FrageCode FROM Frage WHERE UmfrageName LIKE '{UmfrageName}';""" # We want all FrageCodes here
+q = f"""SELECT FrageCode FROM Frage WHERE UmfrageName LIKE '{UmfrageName}';""" 
 cols =  pd.read_sql(q, con=cnxn)
 col_list =  cols.FrageCode.values.tolist()
 
@@ -29,22 +24,12 @@ cols = ', '.join(col_list)
 query = f"""SELECT {cols} FROM Teilnehmer WHERE UmfrageName LIKE '{UmfrageName}';"""
 
 ## Load data
-starttime = datetime.datetime.now()
-print("Start Loading data from Azure: ",starttime)
+start = timeit.default_timer()
 
 kuzu_zug =  pd.read_sql(query , con=cnxn)
 
-endtime = datetime.datetime.now()
-print("finished Loading data from Azure: ",endtime)
-print("Duration: ",endtime-starttime)
+end = timeit.default_timer()
+print("Duration: ",end-start)
 
 ## Save file
-kuzu_zug.to_feather("data/DataRaw") # store data in feather file
-
-
-################### Timer ###################
-endtime = datetime.datetime.now()
-print("End: ",endtime)
-print("Duration: ",endtime-starttime)
-
-##################################################################################################
+kuzu_zug.to_feather("data/DataRaw")
