@@ -226,186 +226,436 @@ def calculate_trending_keywords_rake(df, group_column, text_column):
 #######################################
 ################ TFIDF #################
 
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from collections import Counter
+# import pandas as pd
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from collections import Counter
 
-def calculate_trending_keywords_tfidf(df, group_column, text_column, min_df=0.0, max_df=1):
-    # Create an empty dataframe to store the final results
-    results = pd.DataFrame(columns=['Keyword', 'Score', 'Group', 'Rank','Count','Count Relative'])
-    # Get all unique groups in the dataframe
-    groups = df[group_column].unique()
-    # Initialize the TfidfVectorizer object
-    tfidf = TfidfVectorizer(min_df=min_df, max_df=max_df)
+# def calculate_trending_keywords_tfidf(df, group_column, text_column, min_df=0.0, max_df=1):
+#     # Create an empty dataframe to store the final results
+#     results = pd.DataFrame(columns=['Keyword', 'Score', 'Group', 'Rank','Count','Count Relative'])
+#     # Get all unique groups in the dataframe
+#     groups = df[group_column].unique()
+#     # Initialize the TfidfVectorizer object
+#     tfidf = TfidfVectorizer(min_df=min_df, max_df=max_df)
 
-    for group in groups:
-        # Get the text data for the current group
-        group_text = df[df[group_column] == group][text_column]
-        group_text = group_text.str.cat(sep=' ')
-        # Extract the keywords and their scores
-        tfidf_matrix = tfidf.fit_transform([group_text])
-        feature_names = tfidf.get_feature_names_out()
-        scores = tfidf_matrix.toarray()[0]
-        feature_indexes = scores.argsort()[-10:][::-1]
-        feature_names = [feature_names[i] for i in feature_indexes]
-        feature_scores = [scores[i] for i in feature_indexes]
-        # Create a new dataframe with the top 10 keywords and their scores for the current group
-        group_df = pd.DataFrame({'Keyword':feature_names,'Score':feature_scores})
-        group_df['Group'] = group
-        # Add a new column for the rank of each keyword
-        group_df['Rank'] = range(1, 11)
+#     for group in groups:
+#         # Get the text data for the current group
+#         group_text = df[df[group_column] == group][text_column]
+#         group_text = group_text.str.cat(sep=' ')
+#         # Extract the keywords and their scores
+#         tfidf_matrix = tfidf.fit_transform([group_text])
+#         feature_names = tfidf.get_feature_names_out()
+#         scores = tfidf_matrix.toarray()[0]
+#         feature_indexes = scores.argsort()[-10:][::-1]
+#         feature_names = [feature_names[i] for i in feature_indexes]
+#         feature_scores = [scores[i] for i in feature_indexes]
+#         # Create a new dataframe with the top 10 keywords and their scores for the current group
+#         group_df = pd.DataFrame({'Keyword':feature_names,'Score':feature_scores})
+#         group_df['Group'] = group
+#         # Add a new column for the rank of each keyword
+#         group_df['Rank'] = range(1, 11)
         
-        group_df['Count'] = [tfidf_matrix[0,tfidf.vocabulary_[word]].round(3) for word in feature_names]
-        group_df["Count Relative"] = group_df["Count"]/group_df["Count"].sum()
+#         group_df['Count'] = [tfidf_matrix[0,tfidf.vocabulary_[word]].round(3) for word in feature_names]
+#         group_df["Count Relative"] = group_df["Count"]/group_df["Count"].sum()
         
-        # Append the group dataframe to the final results dataframe
-        results = results.append(group_df)
-    return results
+#         # Append the group dataframe to the final results dataframe
+#         results = results.append(group_df)
+#     return results
 
 
 
-def convert_to_wide_format(df):
-    # Create an empty dataframe with the groups as the index
-    wide_format = pd.DataFrame(index=df['Group'].unique())
+# def convert_to_wide_format(df):
+#     # Create an empty dataframe with the groups as the index
+#     wide_format = pd.DataFrame(index=df['Group'].unique())
     
-    # Loop through the top 10 keywords and add them as columns to the wide format dataframe
-    for i in range(1, 11):
-        keyword_col = 'Keyword ' + str(i)
-        wide_format[keyword_col] = df[df['Rank'] == i].set_index('Group')['Keyword']
+#     # Loop through the top 10 keywords and add them as columns to the wide format dataframe
+#     for i in range(1, 11):
+#         keyword_col = 'Keyword ' + str(i)
+#         wide_format[keyword_col] = df[df['Rank'] == i].set_index('Group')['Keyword']
         
-    return wide_format
+#     return wide_format
 
 
 ##########################
 ######### TFIDF ##########
 
-import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
+from collections import Counter
 
-def get_tfidf(corpus,vectorizer_params=None,n_keywords=10):
-    """
-    Calculate the TF-IDF scores of a corpus and return the top n_keywords.
-    This function takes in one input: corpus, which is a list of strings.
-    The vectorizer_params is a dictionary of parameters to pass to the TfidfVectorizer.
-    The n_keywords parameter specifies the number of keywords to return.
-    The function returns a pandas Series with the n_keywords keywords and their scores.
-    """
-    if vectorizer_params is None:
-        vectorizer_params = {}
-    vectorizer = TfidfVectorizer(**vectorizer_params)
-    tfidf = vectorizer.fit_transform(corpus)
-    feature_names = vectorizer.get_feature_names_out()
-    scores = pd.DataFrame(tfidf.toarray(), columns=feature_names)
-    scores = scores.sum().sort_values(ascending=False)
-    keywords = scores.sort_values(ascending=False).head(n_keywords)
-    return keywords
+def find_trending_keywords(dataframe, filter_column, text_column, ngram_range=(1, 1), n=10, min_df=100, max_df=0.2):
+
+    # convert values in filter column to categorical values
+    dataframe[filter_column] = dataframe[filter_column].astype('category')
+
+    # add "unknown" category to filter_column categories, if not already present
+    if "unknown" not in dataframe[filter_column].cat.categories:
+        dataframe[filter_column] = dataframe[filter_column].cat.add_categories("unknown")
+
+    # replace NaN values in filter_column with "unknown"
+    dataframe[filter_column].fillna("unknown", inplace=True)
+
+    # Create an empty dictionary to store the top keywords and their counts for each value in filter_column
+    trending_keywords = {}
+
+    # Get all values in filter_column
+    values = dataframe[filter_column].unique()
+
+    # Convert the tokenized text column to a list of space-separated strings
+    text_data = [' '.join(words) for words in dataframe[text_column]]
+
+    # Create a TfidfVectorizer object with the specified n-gram range and min_df parameter
+    tfidf_vect = TfidfVectorizer(ngram_range=ngram_range, min_df=min_df, max_df=max_df)
+
+    # Fit and transform the tokenized text column for the whole corpus
+    tfidf = tfidf_vect.fit_transform(text_data)
+
+    # Loop over the values
+    for value in values:
+        # Filter the dataframe for the given value in filter_column
+        filter_data = dataframe[dataframe[filter_column] == value]
+
+        # Convert the tokenized text column to a list of space-separated strings
+        text_data_filter = [' '.join(words) for words in filter_data[text_column]]
+
+        # Transform the tokenized text column for the given value using the fitted TfidfVectorizer
+        tfidf_filter = tfidf_vect.transform(text_data_filter)
+
+        # Compute the sum of TF-IDF scores for each term in the given value
+        tfidf_filter = tfidf_filter.sum(axis=0)
+
+        # Create a list of tuples with the term and its TF-IDF score for the group
+        keywords = [(term, tfidf_filter[0, index]) for term, index in tfidf_vect.vocabulary_.items()]
+
+        # Filter out terms that have zero TF-IDF scores
+        keywords = [kw for kw in keywords if kw[1] > 0]
+
+        # Sort the keywords based on their TF-IDF scores
+        keywords.sort(key=lambda x: x[1], reverse=True)
+
+        # Count the occurrence of each keyword in the group
+        group_text_data = ' '.join(text_data_filter)
+        group_word_count = Counter(group_text_data.split())
+
+        # Create a list of tuples with the term, its TF-IDF score, and count in the group
+        keywords_with_count = [(kw[0], kw[1], group_word_count[kw[0]], group_word_count[kw[0]]/len(group_word_count)) for kw in keywords]
+
+        # Store the top n keywords for the given value in the dictionary
+        trending_keywords[value] = keywords_with_count[:n]
+
+    # Return the dictionary of top keywords and their counts for each value in filter_column
+    return trending_keywords
 
 
 
-def compare_tfidf(corpus_one, corpus_two,vectorizer_params=None,n_keywords=10):
-    """
-    Compare the TF-IDF scores of two corpora and return the top n_keywords with the highest difference in score between the two corpora.
-    This function takes in two inputs: corpus_one and corpus_two, which are lists of strings.
-    The vectorizer_params is a dictionary of parameters to pass to the TfidfVectorizer.
-    The n_keywords parameter specifies the number of keywords to return.
-    The function returns a pandas Series with the n_keywords keywords and their scores.
-    """
-    if vectorizer_params is None:
-        vectorizer_params = {}
-    vectorizer = TfidfVectorizer(**vectorizer_params)
-    corpus_one_tfidf = vectorizer.fit_transform(corpus_one)
-    feature_names = vectorizer.get_feature_names_out()
-    corpus_one_scores = pd.DataFrame(corpus_one_tfidf.toarray(), columns=feature_names)
-    corpus_one_scores = corpus_one_scores.sum().sort_values(ascending=False)
-    corpus_two_tfidf = vectorizer.transform(corpus_two)
-    corpus_two_scores = pd.DataFrame(corpus_two_tfidf.toarray(), columns=feature_names)
-    corpus_two_scores = corpus_two_scores.sum().sort_values(ascending=False)
-    diff = corpus_two_scores - corpus_one_scores
-    keywords = diff.sort_values(ascending=False).head(n_keywords)
-    return keywords
+##### Compare comments by categorie to see saisonal and temporal trends ###
+
+def find_trending_keywords_diff_normaized(dataframe, filter_column, text_column, ngram_range=(1, 1), n=10, min_df=100, max_df=0.2):
+
+    # convert values in filter column to categorical values
+    dataframe[filter_column] = dataframe[filter_column].astype('category')
+
+    # add "unknown" category to filter_column categories, if not already present
+    if "unknown" not in dataframe[filter_column].cat.categories:
+        dataframe[filter_column] = dataframe[filter_column].cat.add_categories("unknown")
+
+    # replace NaN values in filter_column with "unknown"
+    dataframe[filter_column].fillna("unknown", inplace=True)
+
+    # create an empty dictionary to store the top keywords for each value in filter_column
+    trending_keywords = {}
+
+    # get all values in filter_column
+    values = dataframe[filter_column].unique()
+
+    # convert the tokenized text column to a list of space-separated strings
+    text_data = [' '.join(words) for words in dataframe[text_column]]
+
+    # create a TfidfVectorizer object with the specified n-gram range and min_df parameter
+    tfidf_vect = TfidfVectorizer(ngram_range=ngram_range, min_df=min_df, max_df=max_df)
+
+    # fit and transform the tokenized text column for the whole corpus
+    tfidf = tfidf_vect.fit_transform(text_data)
+
+    # loop over the values
+    for value in values:
+        # filter the dataframe for the given value in filter_column
+        filter_data = dataframe[dataframe[filter_column] == value]
+
+        # convert the tokenized text column to a list of space-separated strings
+        text_data_filter = [' '.join(words) for words in filter_data[text_column]]
+
+        # transform the tokenized text column for the given value using the fitted TfidfVectorizer
+        tfidf_filter = tfidf_vect.transform(text_data_filter)
+
+        # compute the sum of TF-IDF scores for each term in the given value
+        tfidf_filter = tfidf_filter.sum(axis=0)
+
+        # normalize the TF-IDF scores by the total count of all words in the group
+        group_word_count = Counter(' '.join(text_data_filter).split())
+        total_count = sum(group_word_count.values())
+        tfidf_filter = tfidf_filter / total_count
+
+        # Compute the sum of TF-IDF scores for each term in the other values
+        tfidf_other_sum = 0
+        for other_value in values:
+            if other_value != value:
+                # Filter the dataframe for the other value in filter_column
+                other_data = dataframe[dataframe[filter_column] == other_value]
+
+                # Convert the tokenized text column to a list of space-separated strings
+                text_data_other = [' '.join(words) for words in other_data[text_column]]
+
+                # Transform the tokenized text column for the other value using the fitted TfidfVectorizer
+                tfidf_other = tfidf_vect.transform(text_data_other)
+
+                # Compute the sum of TF-IDF scores for each term in the other value
+                tfidf_other = tfidf_other.sum(axis=0)
+
+                # normalize the TF-IDF scores by the total count
+                total_count = tfidf_other.sum()
+                tfidf_other = tfidf_other / total_count
+
+                # Add the normalized TF-IDF scores to the running sum
+                tfidf_other_sum += tfidf_other
+
+        # Compute the average of the other values' TF-IDF scores for each term
+        tfidf_other_avg = tfidf_other_sum / (len(values) - 1)
+
+        # Compute the difference in TF-IDF scores between the given value and the average of the other values
+        tfidf_diff = tfidf_filter - tfidf_other_avg
+
+        # Create a list of tuples with the term and its TF-IDF score difference
+        keywords = [(term, tfidf_diff[0, index]) for term, index in tfidf_vect.vocabulary_.items()]
+
+        # Filter out terms that have negative or zero TF-IDF score differences
+        #keywords = [kw for kw in keywords if kw[1] > 0]
+
+        # Sort the keywords based on their TF-IDF score difference
+        keywords.sort(key=lambda x: x[1], reverse=True)
+
+        # Count the occurrence of each keyword in the group
+        group_text_data = ' '.join(text_data_filter)
+        group_word_count = Counter(group_text_data.split())
+
+        # Compute the total count of all words in the group
+        total_count = sum(group_word_count.values())
+
+        # Create a list of tuples with the term, its TF-IDF score difference, count in the group, and relative count
+        keywords_with_count_rel = [(kw[0], kw[1], group_word_count[kw[0]], group_word_count[kw[0]] / total_count) for kw in keywords]
+
+        # Store the top n keywords for the given value in the dictionary with relative count
+        trending_keywords[value] = keywords_with_count_rel[:n]
+
+    # Return the dictionary of top keywords for each value in filter_column
+    return trending_keywords
 
 
     ##########################
 
+
 # import spacy
+# import re
 # from spacy.lang.de.stop_words import STOP_WORDS
 
-# def preprocess_text(df, text_column, locations=None):
+# def preprocess_text(df, text_column, custom_stopwords=None):
 #     nlp = spacy.load("de_core_news_lg")
-#     df["text_preprocessed"] = ""
-#     df["tokenized"] = ""
-#     df["lemmatized"] = ""
-#     df["lemmatized_no_loc"] = ""
-#     df["nouns"] = ""
-
-#     for i in range(len(df)):
-#         # Lowercase the text
-#         text = df.loc[i, text_column].lower()
-#         text = " ".join([word for word in text.split() if word not in STOP_WORDS])
-#         df.at[i, "text_preprocessed"] = text
-
-#         # Tokenize the text
+#     words_to_remove = set(STOP_WORDS) | set(custom_stopwords) if custom_stopwords else set(STOP_WORDS)
+    
+#     # Lowercase the text, remove stop words and custom stopwords, and remove numbers and special characters
+#     text_preprocessed = df[text_column].str.lower().apply(
+#         lambda x: " ".join([re.sub(r'[^\w\s]', '', word) for word in re.sub(r'([a-zA-Z]+)-([a-zA-Z]+)', r'\1 \2', x).split() if word not in words_to_remove and not re.search(r'\d', word)])
+#     )
+    
+#     lemmatized = []
+#     nouns = []
+#     adjectives = []
+#     verbs = []
+#     nouns_adjectives_and_verbs = []
+#     for text in text_preprocessed:
 #         doc = nlp(text)
-#         tokens = [token.text.lower() for token in doc if token.text]
-#         df.at[i, "tokenized"] = tokens
+#         if not doc:
+#             lemmatized.append([])
+#             nouns.append([])
+#             adjectives.append([])
+#             verbs.append([])
+#             nouns_adjectives_and_verbs.append([])
+#             continue
+        
+#         lemmatized_text = []
+#         nouns_text = []
+#         adjectives_text = []
+#         verbs_text = []
+#         nouns_adjectives_and_verbs_text = []
+#         for token in doc:
+#             if not token.text or not token.lemma_:
+#                 continue
+#             lemmatized_text.append(token.lemma_.lower())
+#             if token.pos_ == "NOUN":
+#                 nouns_text.append(token.lemma_.lower())
+#                 nouns_adjectives_and_verbs_text.append(token.lemma_.lower())
+#             if token.pos_ == "ADJ":
+#                 adjectives_text.append(token.lemma_.lower())
+#                 nouns_adjectives_and_verbs_text.append(token.lemma_.lower())
+#             if token.pos_ == "VERB":
+#                 verbs_text.append(token.lemma_.lower())
+#                 nouns_adjectives_and_verbs_text.append(token.lemma_.lower())
+                
+#         lemmatized.append(lemmatized_text)
+#         nouns.append(nouns_text)
+#         adjectives.append(adjectives_text)
+#         verbs.append(verbs_text)
+#         nouns_adjectives_and_verbs.append(nouns_adjectives_and_verbs_text)
+        
+#     df["text_preprocessed"] = text_preprocessed
+#     df["lemmatized"] = lemmatized
+#     df["nouns"] = nouns
+#     df["adjectives"] = adjectives
+#     df["verbs"] = verbs
+#     df["nouns_adjectives_and_verbs"] = nouns_adjectives_and_verbs
 
-#         # Lemmatize the tokens
-#         lemmas = [token.lemma_.lower() for token in doc if token.text]
-#         df.at[i, "lemmatized"] = lemmas
-#         if locations:
-#             lemmas_no_loc = [lemma for lemma in lemmas if lemma not in locations]
-#             df.at[i, "lemmatized_no_loc"] = lemmas_no_loc
-#         else:
-#             df.at[i, "lemmatized_no_loc"] = lemmas
-
-#         # Extract the nouns
-#         nouns = [token.text.lower() for token in doc if token.pos_ == "NOUN"]
-#         df.at[i, "nouns"] = nouns
 #     return df
 
-import spacy
-from spacy.lang.de.stop_words import STOP_WORDS
 
-def preprocess_text(df, text_column, locations=None):
+
+# import spacy
+# import re
+# from spacy.lang.de.stop_words import STOP_WORDS
+
+# def preprocess_text(df, text_column, custom_stopwords=None):
+#     nlp = spacy.load("de_core_news_lg")
+#     words_to_remove = set(STOP_WORDS) | set(custom_stopwords) if custom_stopwords else set(STOP_WORDS)
+    
+#     # Lowercase the text, remove stop words and custom stopwords, and remove numbers and special characters
+#     text_preprocessed = df[text_column].str.lower().apply(
+#         lambda x: " ".join([re.sub(r'[^\w\s]', '', word) for word in re.sub(r'([a-zA-Z]+)-([a-zA-Z]+)', r'\1 \2', x).split() if word not in words_to_remove and not re.search(r'\d', word)])
+#     )
+    
+#     lemmatized = []
+#     nouns = []
+#     adjectives = []
+#     verbs = []
+#     nouns_adjectives_and_verbs = []
+#     text_preprocessed_tokenized = []
+    
+#     for text in text_preprocessed:
+#         doc = nlp(text)
+#         if not doc:
+#             lemmatized.append([])
+#             nouns.append([])
+#             adjectives.append([])
+#             verbs.append([])
+#             nouns_adjectives_and_verbs.append([])
+#             text_preprocessed_tokenized.append([])
+#             continue
+        
+#         lemmatized_text = []
+#         nouns_text = []
+#         adjectives_text = []
+#         verbs_text = []
+#         nouns_adjectives_and_verbs_text = []
+#         text_preprocessed_tokenized_text = []
+        
+#         for token in doc:
+#             if not token.text or not token.lemma_:
+#                 continue
+#             lemmatized_text.append(token.lemma_.lower())
+#             if token.pos_ == "NOUN":
+#                 nouns_text.append(token.lemma_.lower())
+#                 nouns_adjectives_and_verbs_text.append(token.lemma_.lower())
+#             if token.pos_ == "ADJ":
+#                 adjectives_text.append(token.lemma_.lower())
+#                 nouns_adjectives_and_verbs_text.append(token.lemma_.lower())
+#             if token.pos_ == "VERB":
+#                 verbs_text.append(token.lemma_.lower())
+#                 nouns_adjectives_and_verbs_text.append(token.lemma_.lower())
+#             text_preprocessed_tokenized_text.append(token.lemma_.lower())
+                
+#         lemmatized.append(lemmatized_text)
+#         nouns.append(nouns_text)
+#         adjectives.append(adjectives_text)
+#         verbs.append(verbs_text)
+#         nouns_adjectives_and_verbs.append(nouns_adjectives_and_verbs_text)
+#         text_preprocessed_tokenized.append(text_preprocessed_tokenized_text)
+        
+#     df["text_preprocessed"] = text_preprocessed
+#     df["text_preprocessed_tokenized"] = text_preprocessed_tokenized
+#     df["lemmatized"] = lemmatized
+#     df["nouns"] = nouns
+#     df["adjectives"] = adjectives
+#     df["verbs"] = verbs
+#     df["nouns_adjectives_and_verbs"] = nouns_adjectives_and_verbs
+
+#     return df
+
+
+# import spacy
+# import re
+# from spacy.lang.de.stop_words import STOP_WORDS
+
+def preprocess_text(df, text_column, custom_stopwords=None):
     nlp = spacy.load("de_core_news_lg")
-    words_to_remove = set(STOP_WORDS) | set(locations) if locations else set(STOP_WORDS)
-    
-    # Lowercase the text
+    words_to_remove = set(STOP_WORDS) | set(custom_stopwords) if custom_stopwords else set(STOP_WORDS)
+
+    # Lowercase the text, remove stop words and custom stopwords, and remove numbers and special characters
     text_preprocessed = df[text_column].str.lower().apply(
-        lambda x: " ".join([word for word in x.split() if word not in words_to_remove])
+        lambda x: " ".join([re.sub(r'[^\w\s]', '', word) for word in re.sub(r'([a-zA-Z]+)-([a-zA-Z]+)', r'\1 \2', x).split() if word not in words_to_remove and not re.search(r'\d', word)])
     )
-    
-    # Tokenize the text
-    tokenized = [
-        [token.text.lower() for token in nlp(text) if token.text]
-        for text in text_preprocessed
-    ]
-    
-    # Lemmatize the tokens
-    lemmatized = [
-        [token.lemma_.lower() for token in nlp(text) if token.text]
-        for text in text_preprocessed
-    ]
-    
-    # Extract the nouns
-    nouns = [
-        [lemma for lemma in lemmas if nlp(lemma)[0].pos_ == "NOUN"]
-        for lemmas in lemmatized
-    ]
-    
-    # Extract the nouns and adjectives
-    nouns_and_adjectives = [
-        [lemma for lemma in lemmas if nlp(lemma)[0].pos_ in ["NOUN", "ADJ"]]
-        for lemmas in lemmatized
-    ]
-    
+
+    tokenized = []
+    nouns = []
+    adjectives = []
+    verbs = []
+    nouns_adjectives_and_verbs = []
+
+    for text in text_preprocessed:
+        doc = nlp(text)
+        if not doc:
+            tokenized.append([])
+            nouns.append([])
+            adjectives.append([])
+            verbs.append([])
+            nouns_adjectives_and_verbs.append([])
+            continue
+
+        tokenized_text = []
+        nouns_text = []
+        adjectives_text = []
+        verbs_text = []
+        nouns_adjectives_and_verbs_text = []
+
+        for token in doc:
+            if not token.text:
+                continue
+            token_text = token.text.lower()
+            if token_text not in words_to_remove:
+                tokenized_text.append(token_text)
+                if token.pos_ == "NOUN":
+                    nouns_text.append(token_text)
+                    nouns_adjectives_and_verbs_text.append(token_text)
+                if token.pos_ == "ADJ":
+                    adjectives_text.append(token_text)
+                    nouns_adjectives_and_verbs_text.append(token_text)
+                if token.pos_ == "VERB":
+                    verbs_text.append(token_text)
+                    nouns_adjectives_and_verbs_text.append(token_text)
+
+        tokenized.append(tokenized_text)
+        nouns.append(nouns_text)
+        adjectives.append(adjectives_text)
+        verbs.append(verbs_text)
+        nouns_adjectives_and_verbs.append(nouns_adjectives_and_verbs_text)
+
     df["text_preprocessed"] = text_preprocessed
-    df["tokenized"] = tokenized
-    df["lemmatized"] = lemmatized
+    df["text_preprocessed_tokenized"] = tokenized
+    df["lemmatized"] = None
     df["nouns"] = nouns
-    df["nouns_and_adjectives"] = nouns_and_adjectives
-    
+    df["adjectives"] = adjectives
+    df["verbs"] = verbs
+    df["nouns_adjectives_and_verbs"] = nouns_adjectives_and_verbs
+
     return df
+
+
 #####################
 
 def join_list_of_list(list_of_list):
@@ -419,6 +669,32 @@ def join_list_of_list(list_of_list):
          List[str]: List of strings where each string is made by joining the elements of the corresponding list.
     """
     return [' '.join(map(str,l)) for l in list_of_list]
+
+
+
+def reduce_dataframe(df, group_column, filter_value):
+    """
+    Reduces a Pandas dataframe based on a specific column and value.
+    
+    Parameters:
+    df (Pandas dataframe): The dataframe to reduce.
+    group_column (str): The name of the column to group the dataframe by.
+    filter_value: The value to filter the dataframe on.
+    
+    Returns:
+    A reduced Pandas dataframe.
+    """
+    
+    # Group the dataframe by the specified column
+    grouped = df.groupby(group_column)
+    
+    # Filter the groups based on the filter value
+    filtered_groups = {group: data for group, data in grouped if filter_value in data[group_column].values}
+    
+    # Combine the filtered groups into a new dataframe
+    reduced_df = pd.concat(filtered_groups.values())
+    
+    return reduced_df
 
 
 ###########################
