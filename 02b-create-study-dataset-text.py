@@ -1,17 +1,6 @@
 import pandas as pd
 from functions import *
-# from textblob_de import TextBlobDE
-# from gensim.utils import simple_preprocess
-# from globalvars import *
-# from nltk.corpus import stopwords, wordnet
-# from nltk.tokenize import word_tokenize
-# import spacy
-# from spacy.lang.de.stop_words import STOP_WORDS
-# import nltk
-# import spacy
-# import string
 import timeit
-# import itertools
 import csv
 
 start = timeit.default_timer()
@@ -20,26 +9,51 @@ print(start)
 ## Import dataframe
 filelocation = 'data/DataClean'
 df = pd.read_feather(filelocation)
-#df = df.head(10000)
-#print(len(df))
 
-## load gemeindenamen csv
-with open('config/gemeindenamen.csv', 'r') as file:
-    reader = csv.reader(file)
-    data = list(reader)
+###### Stopword list creation #########
 
-def flatten_list(nested_list):
-    return [item for sublist in nested_list for item in sublist]
-gemeindenamen = flatten_list(data)
+# import custom stopwords list
+customstopwords = pd.read_excel('config/customstopwords.xlsx')
+customstopwords = customstopwords['stopword'].tolist()
 
+# Also add ortsnamen to the stoplist because we have them in the metadata and dont want them in the comments
+orte = [x.lower() for x in set(df.ft_startort.tolist()) if x == x and x.lower() != '']
 
-# nltk.download('averaged_perceptron_tagger')
-# nltk.download('punkt')
-# nltk.download('stopwords')
+# Create the list of locations
+for location in df.ft_startort.tolist():
+    # Check if the value is a string
+    if isinstance(location, str):
+        # Convert to lowercase and remove 'Zug'
+        location = location.lower()
+        if location == 'zug':
+            continue
+        
+        # Split the location into tokens if it contains whitespace
+        tokens = location.split()
+        
+        # Add each token to the list individually
+        for token in tokens:
+            # Skip any token that is in the stoplist
+            if token in orte:
+                continue
+            # Remove any commas from the end of the token
+            token = token.rstrip(',')
+            orte.append(token)
+    
+# Remove duplicates from the list
+orte = list(set(orte))
 
+orte.remove("zug")
+
+# extend the stopword list with the ortsnamen
+customstopwords.extend(orte)
 
 ## Keep only surveys with filled out "Kommentar"
 df_text = df.dropna(subset=["Kommentar"])
+
+#df_text = df_text.head(2000)
+print(len(df_text))
+
 df_text = df_text[df_text.Kommentar.apply(lambda x: len(str(x))>=3)] # min 3 characters for valid comment
 df_text.reset_index(inplace=True, drop=True)
 
@@ -49,7 +63,9 @@ df_text["Kommentar"] = remove_redundant_whitespaces(df_text["Kommentar"]) #note:
 df_text = add_basic_textfeatures(df_text,"Kommentar")
 
 ## Preprocess text
-preprocess_text(df_text, 'Kommentar', locations=gemeindenamen)
+#preprocess_text(df_text, 'Kommentar', locations=didok)
+preprocess_text(df_text, 'Kommentar', custom_stopwords=customstopwords)
+
 
 
 # print('B')
