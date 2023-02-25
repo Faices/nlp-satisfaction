@@ -1,0 +1,6 @@
+,0
+BERTTopic_paraphrase-MiniLM-L3-v2_normalized50T.model,0.6262942013489862
+BERTTopic_all-MiniLM-L6-v2_normalized50T.model,0.6758428095652541
+BERTTopic_all-MiniLM-L12-v2_normalized50T.model,0.6785979845064479
+BERTTopic_all-distilroberta-v1_normalized50T.model,0.6682615577981083
+BERTTopic_default_normalized50T.model,0.7157063022215078
