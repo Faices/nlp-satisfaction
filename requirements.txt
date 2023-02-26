@@ -16,3 +16,5 @@ pyarrow
 ipywidgets
 gensim
 xlsxwriter
+tensorflow
+tensorflow_hub
