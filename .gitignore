@@ -9,8 +9,6 @@ parts
 src/*.egg-info
 lib
 lib64
-data/*
-models/*
 /config/.env
 .vscode/
 __pycache__/
