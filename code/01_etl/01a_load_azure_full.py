@@ -1,6 +1,6 @@
 import pandas as pd
 import timeit
-from code.functions import sql_azure_connect
+from functions import sql_azure_connect
 
 ## connect to azure database
 cnxn = sql_azure_connect()
