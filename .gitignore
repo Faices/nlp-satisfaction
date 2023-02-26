@@ -13,3 +13,5 @@ lib64
 .vscode/
 __pycache__/
 .ipynb_checkpoints/
+models/*
+data/*
