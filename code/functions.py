@@ -666,6 +666,7 @@ def check_column_values(df, col1, col2):
 
 ##############################################
 ############### Pandas Profiling  ############
+##############################################
 
 
 def generate_profiling_report(data_file="DataText", folder_path="data/", report_title=None, report_file="html/ProfilingDataText.html", lazy=False, dark_mode=False, minimal=True):
@@ -809,6 +810,7 @@ def get_topic_keywords_df(topic_model):
     
     return df
 
+###################################################
 ############## Topic Model Evaluation #############
 
 def compute_coherence_scores(documents: np.ndarray, bert_models: List[str], coherence_method: str = "u_mass", path: str = "") -> pd.Series:
