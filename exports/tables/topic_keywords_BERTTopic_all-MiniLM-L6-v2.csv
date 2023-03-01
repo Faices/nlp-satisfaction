@@ -89,7 +89,7 @@
 87,86,114,verbindungen,schnellere,verbindung,bessere,direkte,schlechte,schnellfahren,verbessern,stündliche,häufigere
 88,87,113,kaffee,gipfeli,wägeli,vermisse,kaffeemaschine,kaffeewägeli,kaffeeservice,kaffeewagen,trinken,fehlt
 89,88,107,bahn,bahnen,deutschen,rhb,app,deutsche,geehrtes,mobile,team,bahnersatz
-90,89,106,bahn,busverbindung,busse,bahnersatzbus,the,9,kante,there,trains,verpasst
+90,89,106,bahn,busverbindung,busse,bahnersatzbus,the,09,kante,there,trains,verpasst
 91,90,103,bistro,bistrowagen,speisewagen,vermisst,bedient,kaffee,geschlossen,caffe,bistrowägeli,gerne
 92,91,103,umsteigen,glarnerland,aussteigen,s2,gleis,verspätung,anschluss,anschlüsse,anschlusszug,umsteigezeit
 93,92,102,getränke,getränk,getränken,snacks,getränkeservice,wägeli,speisewagen,snack,getränkewägeli,kaffee
@@ -101,7 +101,7 @@
 99,98,91,verfügung,stellen,sitzplätze,veloplätze,sparbillette,stehen,bon,plätze,stehende,einlösen
 100,99,89,flug,umsteigen,ic,direkte,europort,29h,direkt,verbindung,direkter,umgekehrt
 101,100,89,kalt,jacke,heiss,kühl,schal,stark,kälter,draussen,sommer,kühlen
-102,101,88,takt,47,0,hochmoor,verbindung,währe,ic4,s9,23,umsteigezeiten
+102,101,88,takt,47,00,hochmoor,verbindung,währe,ic4,s9,23,umsteigezeiten
 103,102,87,zugbegleiter,zugbegleitung,zugbegleiterin,freundlich,präsenz,zugbegleitungspersonal,fremdsprachen,zugbegleiters,zugbegleitern,zugbegleiterinnen
 104,103,86,winter,verbindung,snownrail,wintersaison,wartesaal,winti,schnellere,lockdown,voralpen,warten
 105,104,85,ok,nei,okay,none,good,zau,gsi,tüür,xxxx,xxxxxx
@@ -123,7 +123,7 @@
 121,120,65,bilette,bilett,bilettkauf,bilet,online,bilete,bilettautomat,überteuert,app,teuer
 122,121,64,service,sub,ausgezeichneten,zufrieden,wertvoll,bedanken,speisewagen,andren,arbeitsmaterial,shit
 123,122,64,ic1,total,direkt,anzeige,neigezüge,direkte,00h,umgekehrt,erweitern,sitzen
-124,123,62,gl1,bls,0,benutzt,6,uhrzeit,kürzeren,20,ic1,strecke
+124,123,62,gl1,bls,00,benutzt,06,uhrzeit,kürzeren,20,ic1,strecke
 125,124,62,s3,s9,s6,s7,s24,s11,s8,s21,s99,s28
 126,125,59,covid,19,virus,coronavirus,covid19,ansteckung,corona,abstand,maskenpflicht,situation
 127,126,58,zugpersonal,unfreundlich,freundliches,freundlich,schuhen,hilfsbereit,zugbegleitpersonal,zugpersonals,fahrgäste,vorbei
