@@ -23,6 +23,8 @@ from typing import List
 from nltk.corpus import stopwords
 import logging
 import plotly.graph_objs as go
+from bertopic import BERTopic
+from sklearn.decomposition import PCA
 
 
 ###############################################################
@@ -728,9 +730,15 @@ def fit_berttopic(target_dir: str, docs: list, embedding_model=None, min_topic_s
                 language="german",
                 vectorizer_model=vectorizer,
                 embedding_model=embedding_model,
-                calculate_probabilities=True, #needed for later outlayer reduction
-                min_topic_size=min_topic_size)
+                min_topic_size=min_topic_size,
+                #nr_topics="auto"
+                #umap_model=PCA(n_components=5) #to use PCA as dim reduction
+                )
             topics, probs = model.fit_transform(docs)
+            #model.fit_transform(docs)
+            new_topics = model.reduce_outliers(docs, topics) # Reduce outliers
+            model.update_topics(docs, topics=new_topics,vectorizer_model=vectorizer) # update Model
+
             model.save(target_dir)
             logging.info(f"Model saved to {target_dir}")
         except Exception as e:
@@ -738,6 +746,7 @@ def fit_berttopic(target_dir: str, docs: list, embedding_model=None, min_topic_s
             raise
     else:
         logging.info(f"Model already trained at {target_dir}")
+
 
 
 def fit_berttopic_if_not_exists(target_dir: str, docs: list, embedding_model=None, min_topic_size: int = 50, stop_words=None) -> None:
