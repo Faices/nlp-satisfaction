@@ -779,9 +779,9 @@ def topic_model_top_10_keywords_export(model, modelname, directory_path):
     df_topic_freq = model.get_topic_freq()
     df_topics = pd.merge(df_topic_keywords, df_topic_freq, left_on='topic_id', right_on='Topic', how='left')
     # reorder columns to place the new column as the second column
-    df_topics = df_topics.reindex(columns=['Topic','Count', 'keyword 1', 'keyword 2','keyword 3','keyword 4','keyword 5','keyword 6','keyword 7','keyword 8','keyword 9','keyword 10'])
-    file_path = directory_path + "/topic_keywords_"+ modelname+".csv"
-    df_topics.to_csv(file_path)
+    df_topics = df_topics.reindex(columns=['Topic', 'Count', 'keyword 1', 'keyword 2', 'keyword 3', 'keyword 4', 'keyword 5', 'keyword 6', 'keyword 7', 'keyword 8', 'keyword 9', 'keyword 10'])
+    file_path = directory_path + "/topic_keywords_"+ modelname+".xlsx"
+    df_topics.to_excel(file_path, index=False)
 
     return df_topics
 
