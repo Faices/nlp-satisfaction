@@ -32,7 +32,8 @@ from sklearn.decomposition import PCA
 ###############################################################
 
 # plot settings
-color_discrete_sequence=["#0B1F26","#3F89A6","#204959","#96C6D9","#D0E9F2","#42323A","#6C8C7D","#8EB3A2","#C5D9BA","#546E75"]
+color_discrete_sequence=["#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#ff7c43", "#ffdc00", "#00a2ff", "#7fdbff", "#e8c547", "#55b2d2", "#7fcdbb", "#5a5a5a", "#9c9c9c", "#c9c9c9", "#ef476f", "#6b5b95", "#b565a7", "#ffdab9", "#4d4d4d"]
+#color_discrete_sequence=["#0B1F26","#3F89A6","#204959","#96C6D9","#D0E9F2","#42323A","#6C8C7D","#8EB3A2","#C5D9BA","#546E75"]
 template='plotly_white'
 
 
@@ -869,4 +870,43 @@ def compute_coherence_scores(documents: np.ndarray, bert_models: List[str], cohe
     scores_series = pd.Series(scores)
 
     return scores_series
+
+
+
+def get_topic_ratios(df, timeframe_col, name_col, topic_col):
+    """
+    Compute the ratio of counts for each combination of CustomName and Topic, 
+    aggregated by quarter, relative to the total count for the quarter.
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        The input data containing the columns 'yearquarter', 'CustomName', 'Topic'.
+    timeframe_col : str
+        The name of the column containing the timeframe information like quarteryear.
+    name_col : str
+        The name of the column containing the CustomName information.
+    topic_col : str
+        The name of the column containing the Topic information.
+    
+    Returns:
+    --------
+    pandas.DataFrame
+        A new DataFrame with the columns 'yearquarter', 'CustomName', 'Topic', 'count_x', 'count_y', 'Topic_Ratio'.
+    """
+    timeframe_col = timeframe_col
+
+    # Get totals for each quarter
+    df_counts_quarter = pd.DataFrame(df.groupby([timeframe_col]).size().reset_index(name='count_y'))
+    
+    # Aggregate counts by quarter, CustomName, and Topic
+    df_topic_quarter = pd.DataFrame(df.groupby([timeframe_col, name_col, topic_col]).size().reset_index(name='count_x'))
+    
+    # Merge DataFrames
+    df_topic_quarter = df_topic_quarter.merge(df_counts_quarter, on=timeframe_col, how='left')
+    
+    # Compute Topic_Ratio
+    df_topic_quarter['Topic_Ratio'] = (df_topic_quarter['count_x'] / df_topic_quarter['count_y'])
+    
+    return df_topic_quarter[[timeframe_col, 'CustomName', 'Topic', 'count_x', 'count_y', 'Topic_Ratio']]
 
