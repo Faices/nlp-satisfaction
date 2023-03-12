@@ -33,6 +33,7 @@ from sklearn.decomposition import PCA
 
 # plot settings
 color_discrete_sequence=["#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#ff7c43", "#ffdc00", "#00a2ff", "#7fdbff", "#e8c547", "#55b2d2", "#7fcdbb", "#5a5a5a", "#9c9c9c", "#c9c9c9", "#ef476f", "#6b5b95", "#b565a7", "#ffdab9", "#4d4d4d"]
+color_continuous_scale="Viridis"
 #color_discrete_sequence=["#0B1F26","#3F89A6","#204959","#96C6D9","#D0E9F2","#42323A","#6C8C7D","#8EB3A2","#C5D9BA","#546E75"]
 template='plotly_white'
 
