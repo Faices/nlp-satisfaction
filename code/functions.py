@@ -32,9 +32,15 @@ from sklearn.decomposition import PCA
 ###############################################################
 
 # plot settings
-color_discrete_sequence=["#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#ff7c43", "#ffdc00", "#00a2ff", "#7fdbff", "#e8c547", "#55b2d2", "#7fcdbb", "#5a5a5a", "#9c9c9c", "#c9c9c9", "#ef476f", "#6b5b95", "#b565a7", "#ffdab9", "#4d4d4d"]
-color_continuous_scale="Viridis"
+#color_continuous_scale="darkmint"
+#color_discrete_sequence=['#001d13', '#002822', '#00342f', '#00403a', '#004d46', '#005952', '#00675f', '#00746c', '#008279', '#009087', '#009e94', '#14aca2', '#31bab0', '#45c8bd', '#56d6cb', '#66e5d9', '#75f3e7', '#91ffff']
+#color_discrete_sequence_mixed=['#001d13', '#91ffff', '#002822', '#75f3e7', '#00342f', '#66e5d9', '#00403a', '#56d6cb', '#004d46', '#45c8bd', '#005952', '#31bab0', '#00675f', '#14aca2', '#00746c', '#009e94', '#008279', '#009087']
+
+#color_discrete_sequence=["#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#ff7c43", "#ffdc00", "#00a2ff", "#7fdbff", "#e8c547", "#55b2d2", "#7fcdbb", "#5a5a5a", "#9c9c9c", "#c9c9c9", "#ef476f", "#6b5b95", "#b565a7", "#ffdab9", "#4d4d4d"]
 #color_discrete_sequence=["#0B1F26","#3F89A6","#204959","#96C6D9","#D0E9F2","#42323A","#6C8C7D","#8EB3A2","#C5D9BA","#546E75"]
+color_discrete_sequence= [  "#0B1F26",  "#3F89A6",  "#204959",  "#96C6D9",  "#D0E9F2",  "#42323A",  "#6C8C7D",  "#8EB3A2",  "#C5D9BA",  "#546E75",  "#F08080",  "#FFA07A",  "#FFDAB9",  "#FFA500",  "#FFD700",  "#DAA520",  "#BDB76B",  "#808000",  "#556B2F",  "#8B4513"]
+color_discrete_sequence_mixed= ['#0B1F26', '#8B4513', '#3F89A6', '#556B2F', '#204959', '#808000', '#96C6D9', '#BDB76B', '#D0E9F2', '#DAA520', '#42323A', '#FFD700', '#6C8C7D', '#FFA500', '#8EB3A2', '#FFDAB9', '#C5D9BA', '#F08080', '#546E75', '#FFA07A']
+
 template='plotly_white'
 
 
