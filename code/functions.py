@@ -25,6 +25,8 @@ import logging
 import plotly.graph_objs as go
 from bertopic import BERTopic
 from sklearn.decomposition import PCA
+import plotly.graph_objects as go
+import plotly.express as px
 
 
 ###############################################################
@@ -38,8 +40,9 @@ from sklearn.decomposition import PCA
 
 #color_discrete_sequence=["#003f5c", "#58508d", "#bc5090", "#ff6361", "#ffa600", "#ff7c43", "#ffdc00", "#00a2ff", "#7fdbff", "#e8c547", "#55b2d2", "#7fcdbb", "#5a5a5a", "#9c9c9c", "#c9c9c9", "#ef476f", "#6b5b95", "#b565a7", "#ffdab9", "#4d4d4d"]
 #color_discrete_sequence=["#0B1F26","#3F89A6","#204959","#96C6D9","#D0E9F2","#42323A","#6C8C7D","#8EB3A2","#C5D9BA","#546E75"]
-color_discrete_sequence= [  "#0B1F26",  "#3F89A6",  "#204959",  "#96C6D9",  "#D0E9F2",  "#42323A",  "#6C8C7D",  "#8EB3A2",  "#C5D9BA",  "#546E75",  "#F08080",  "#FFA07A",  "#FFDAB9",  "#FFA500",  "#FFD700",  "#DAA520",  "#BDB76B",  "#808000",  "#556B2F",  "#8B4513"]
+color_discrete_sequence= [ "#0B1F26",  "#3F89A6",  "#204959",  "#96C6D9",  "#D0E9F2",  "#42323A",  "#6C8C7D",  "#8EB3A2",  "#C5D9BA",  "#546E75",  "#F08080",  "#FFA07A",  "#FFDAB9",  "#FFA500",  "#FFD700",  "#DAA520",  "#BDB76B",  "#808000",  "#556B2F",  "#8B4513"]
 color_discrete_sequence_mixed= ['#0B1F26', '#8B4513', '#3F89A6', '#556B2F', '#204959', '#808000', '#96C6D9', '#BDB76B', '#D0E9F2', '#DAA520', '#42323A', '#FFD700', '#6C8C7D', '#FFA500', '#8EB3A2', '#FFDAB9', '#C5D9BA', '#F08080', '#546E75', '#FFA07A']
+color_discrete_kuzu= ["#49787F","#A96262","#F06969","#C499CA","#EDB183","#B6D6CC","#9D6E94","#4FB286","#87A07C","#74A4BC","#F0C7ED","#9C89B8","#F06969","#ECD9BD"]
 
 template='plotly_white'
 
@@ -63,7 +66,7 @@ def sql_azure_connect():
     '''
 
     # Load .env file
-    load_dotenv('config/.env')
+    load_dotenv('../config/.env')
 
     # Import credentials for kuzu Azure DB from .env file
     credentials = {
@@ -517,6 +520,19 @@ def create_export_table(df, filename=None):
 
     fig.show()
 
+#####################################################
+
+def export_table_to_xlsx(df, filename=None):
+    if filename is not None:
+        df.to_excel(filename, index=False)
+    else:
+        # Display the table if filename is not provided
+        fig = go.Figure(data=[go.Table(
+            header=dict(values=list(df.columns)),
+            cells=dict(values=[df[col] for col in df.columns]))
+        ])
+        fig.show()
+
 
 #####################################
 ######## Text Preprocessing  ########
@@ -780,18 +796,31 @@ def fit_berttopic_if_not_exists(target_dir: str, docs: list, embedding_model=Non
 
 
 ################## Extract top 10 topic keywords from topic model ##############
-
-
 def topic_model_top_10_keywords_export(model, modelname, directory_path):
     df_topic_keywords = get_topic_keywords_df(model)
     df_topic_freq = model.get_topic_freq()
     df_topics = pd.merge(df_topic_keywords, df_topic_freq, left_on='topic_id', right_on='Topic', how='left')
+    total_count = df_topics['Count'].sum()
+    df_topics['Count %'] = ((df_topics['Count'] / total_count) * 100).round(1)
     # reorder columns to place the new column as the second column
-    df_topics = df_topics.reindex(columns=['Topic', 'Count', 'keyword 1', 'keyword 2', 'keyword 3', 'keyword 4', 'keyword 5', 'keyword 6', 'keyword 7', 'keyword 8', 'keyword 9', 'keyword 10'])
+    df_topics = df_topics.reindex(columns=['Topic', 'Count', 'Count %', 'keyword 1', 'keyword 2', 'keyword 3', 'keyword 4', 'keyword 5', 'keyword 6', 'keyword 7', 'keyword 8', 'keyword 9', 'keyword 10'])
     file_path = directory_path + "/topic_keywords_"+ modelname+".xlsx"
     df_topics.to_excel(file_path, index=False)
 
     return df_topics
+
+
+
+# def topic_model_top_10_keywords_export(model, modelname, directory_path):
+#     df_topic_keywords = get_topic_keywords_df(model)
+#     df_topic_freq = model.get_topic_freq()
+#     df_topics = pd.merge(df_topic_keywords, df_topic_freq, left_on='topic_id', right_on='Topic', how='left')
+#     # reorder columns to place the new column as the second column
+#     df_topics = df_topics.reindex(columns=['Topic', 'Count', 'keyword 1', 'keyword 2', 'keyword 3', 'keyword 4', 'keyword 5', 'keyword 6', 'keyword 7', 'keyword 8', 'keyword 9', 'keyword 10'])
+#     file_path = directory_path + "/topic_keywords_"+ modelname+".xlsx"
+#     df_topics.to_excel(file_path, index=False)
+
+#     return df_topics
 
 ################
 
@@ -916,4 +945,137 @@ def get_topic_ratios(df, timeframe_col, name_col, topic_col):
     df_topic_quarter['Topic_Ratio'] = (df_topic_quarter['count_x'] / df_topic_quarter['count_y'])
     
     return df_topic_quarter[[timeframe_col, 'CustomName', 'Topic', 'count_x', 'count_y', 'Topic_Ratio']]
+
+
+import pandas as pd
+
+def compute_categorical_counts(df, categorical_col, name_col):
+    """
+    Compute the counts and relative counts for each combination of CustomName and Topic, 
+    aggregated by the categorical column.
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        The input data containing the columns for the categorical_col, name_col, and topic_col.
+    categorical_col : str
+        The name of the column containing the categorical information (e.g. year, quarter, month, etc.).
+    name_col : str
+        The name of the column containing the CustomName information.
+    topic_col : str
+        The name of the column containing the Topic information.
+    
+    Returns:
+    --------
+    pandas.DataFrame
+        A new DataFrame with the columns 'categorical_col', 'CustomName', 'Topic', 'count', and 'relative_count'.
+    """
+    # Aggregate counts by categorical value, CustomName, and Topic
+    df_topic_categorical = pd.DataFrame(df.groupby([categorical_col, name_col]).size().reset_index(name='count'))
+    
+    # Compute total count for each categorical value
+    df_total_count = pd.DataFrame(df.groupby([categorical_col]).size().reset_index(name='total_count'))
+    
+    # Merge total count into topic counts DataFrame
+    df_topic_categorical = df_topic_categorical.merge(df_total_count, on=categorical_col)
+    
+    # Compute relative count
+    df_topic_categorical['relative_count'] = df_topic_categorical['count'] / df_topic_categorical['total_count']
+    
+    return df_topic_categorical[[categorical_col, name_col, 'count', 'relative_count']]
+
+
+
+
+
+
+
+
+# def create_grouped_barchart(df, x_col, y_col, color_col, color_discrete_sequence, ignore_group=None, title='', xaxis_title='', yaxis_title='', legend_title='', template=''):
+#     if ignore_group:
+#         df = df[df[color_col] != ignore_group]
+#     fig = px.bar(df,
+#                  x=x_col,
+#                  y=y_col,
+#                  color=color_col,
+#                  hover_data=[color_col, y_col,x_col],
+#                  color_discrete_sequence=color_discrete_sequence,
+#                  template=template,
+#                  barmode='group')
+    
+#     fig.update_layout(
+#         width=900, 
+#         height=600,
+#         title=title,
+#         yaxis_title=yaxis_title,
+#         xaxis_title=xaxis_title,
+#         legend_title=legend_title,
+#     )
+    
+#     fig.update_xaxes(showgrid=False, tickmode='linear', tickangle=0, tickfont=dict(size=12), tickwidth=1)
+#     fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='rgba(0,0,0,0.1)')
+    
+#     # wrap long x-axis labels on two lines and rotate by 270 degrees
+#     fig.update_layout(
+#         xaxis=dict(
+#             tickmode='array',
+#             tickvals=list(range(len(df[x_col]))),
+#             ticktext=[x.replace(' ', '<br>') if len(x) > 40 else x for x in df[x_col]],
+#             automargin=True,
+#             tickangle=270,
+#             tickfont=dict(size=12),
+#         ),
+#         legend=dict(orientation='h', yanchor='top', y=1.1, xanchor='left', x=0.5)
+#     )
+    
+#     fig.show()
+
+def create_grouped_radar(df, x_col, y_col, color_col, color_discrete_sequence, ignore_group=None, title='', xaxis_title='', yaxis_title='', legend_title='', template=''):
+    fig = go.Figure()
+    for color in df[color_col].unique():
+        if color != ignore_group:
+            fig.add_trace(go.Scatterpolar(
+                r=df[df[color_col] == color][y_col].values.tolist(),
+                theta=df[df[color_col] == color][x_col].values.tolist(),
+                fill='none',
+                name=color,
+                line=dict(color=color_discrete_sequence[df[color_col].unique().tolist().index(color)]),
+                showlegend=True,
+                marker=dict(size=4)
+            ))
+    fig.update_layout(
+        width=900, 
+        height=650,
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[0, df[y_col].max()],
+                showgrid=True,
+                gridwidth=1,
+                gridcolor='rgba(0,0,0,0.1)'
+            ),
+            angularaxis=dict(
+                visible=True,
+                tickmode='linear',
+                tickfont=dict(size=10),
+                showticklabels=True,
+                gridcolor='rgba(0,0,0,0.1)'
+            )
+        ),
+        showlegend=True,
+        title=title,
+        legend_title=legend_title,
+        xaxis_title=xaxis_title,
+        yaxis_title=yaxis_title,
+        template=template
+    )
+
+    # fig.update_layout(legend=dict(orientation='h', yanchor='top', y=1.1, xanchor='center', x=0.5))
+
+    fig.show()
+
+
+
+
+
 
